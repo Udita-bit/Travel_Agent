@@ -1,33 +1,34 @@
 import React from 'react'
 import  GoogleMapReact from 'google-map-react';
-import {paper,Typography,useMediaQuery} from '@mui/materail';
+import {Paper,Typography,useMediaQuery} from '@mui/materail';
 import LocationOnOutlinedIcon from '@material-ui/icons/LocationOnOutlined';
 import Rating from '@materail-ui/lab/Rating';
 
-import useStyles from './styles';
+import useStyles from './styles.js';
 
-const Map = ({setbounds,setcoordinates,coordinates,places}) => {
+import mapStyles from './mapStyles';
+
+const Map = ({coord,setcoord,places,setChildClicked,weatherData}) => {
     const classes=useStyles();
-    const isDesktop=useMediaQuery('(min-width:600px)');
+    const matches=useMediaQuery('(min-width:600px)');
     
 
-    const coordinator={lat:0,lng:0};
     return (
     <div className={classes.mapContainer}>
-        <GoogleMapReact bootstrapURLKeys={{key:'AIzaSyDSF3yHMAtgfpEKxxdBFhLwwF2Ui98nNtU'}}
-        defaultCenter={coordinates}
-        center={coordinates}
+        <GoogleMapReact bootstrapURLKeys={{key:process.env.REACT_APP_GOOGLE_MAPS_API_KEY}}
+        defaultCenter={coord}
+        center={coord}
         defaultZoom={14}
         margin={[50,50,50,50]}
-        options={''}
+        options={{disableDefaultUI:true , zoomControl:true , styles:mapStyles}}
         onChange={(e)=>{
           
-          setcoordinates({ lat :e.center.lat,lng:e.center.lng});
+          setcoord({ lat :e.center.lat,lng:e.center.lng});
           setbounds({ne:e.marginBounds.ne,sw:e.marginBounds.sw});
         }}
         onChildClick={(child)=>{setChildClicked(child)}}
         >
-        {places?.map((places,i)=>(
+        {places.length && places.map((places,i)=>(
           <div 
           className={classes.markerContainer}
           lat={Number(places.latitude)}
@@ -35,18 +36,23 @@ const Map = ({setbounds,setcoordinates,coordinates,places}) => {
           key={i}
           >
             {
-              !isDesktop ? (
+              ! matches ?
                 <LocationOnOutlinedIcon color="primary" fontSize="large"/>
-              ) : (
-                <paper elevation ={3} className={classes.paper}>
+              : (
+                <Paper elevation ={3} className={classes.Paper}>
                   <Typography className={classes.Typography} varient ="subtitle2" gutterBottom>{places.name}</Typography>
                   <img 
                   className={classes.pointer}
                   src={places.photo? places.photo.images.large.url : "https://www.foodserviceandhospitality.com/wp-content/uploads/2016/09/Restaurant-Placeholder-001.jpg"}
                   />
                   <Rating name="read-only" size="small" value={Number(places.rating)} readOnly/>
-                </paper>
+                </Paper>
               )}
+          </div>
+        ))}
+        {weatherData ?.list?.length && weatherData.list.map((data,i)=>(
+          <div key={i} lat={data.coord.lat} lng={data.coord.lon}>
+            <img src={`http://openweathermap.org/img/w/${data.weather[0].icon}.png`} height="70px" />
           </div>
         ))}
         </GoogleMapReact>
